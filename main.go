@@ -16,98 +16,98 @@ var (
 
 	scoreGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "score",
+			Name: "awair_score",
 		},
 		[]string{},
 	)
 
 	dewPointGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "dew_point",
+			Name: "awair_dew_point",
 		},
 		[]string{},
 	)
 
 	tempGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "temp",
+			Name: "awair_temp",
 		},
 		[]string{},
 	)
 
 	humidGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "humid",
+			Name: "awair_humid",
 		},
 		[]string{},
 	)
 
 	absHumidGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "abs_humid",
+			Name: "awair_abs_humid",
 		},
 		[]string{},
 	)
 
 	co2Gauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "co2",
+			Name: "awair_co2",
 		},
 		[]string{},
 	)
 
 	co2EstGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "co2_est",
+			Name: "awair_co2_est",
 		},
 		[]string{},
 	)
 
 	co2EstBaselineGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "co2_est_baseline",
+			Name: "awair_co2_est_baseline",
 		},
 		[]string{},
 	)
 
 	vocGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "voc",
+			Name: "awair_voc",
 		},
 		[]string{},
 	)
 
 	vocBaselineGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "voc_baseline",
+			Name: "awair_voc_baseline",
 		},
 		[]string{},
 	)
 
 	vocH2RawGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "voc_h2_raw",
+			Name: "awair_voc_h2_raw",
 		},
 		[]string{},
 	)
 
 	vocEthanolRawGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "voc_ethanol_raw",
+			Name: "awair_voc_ethanol_raw",
 		},
 		[]string{},
 	)
 
 	pm25Gauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "pm25",
+			Name: "awair_pm25",
 		},
 		[]string{},
 	)
 
 	pm10EstGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "pm10_est",
+			Name: "awair_pm10_est",
 		},
 		[]string{},
 	)
