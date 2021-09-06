@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -14,102 +16,104 @@ import (
 var (
 	AwairURL = os.Getenv("AWAIR_URL")
 
+	labelNames = []string{"device_uuid", "ip"}
+
 	scoreGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "awair_score",
 		},
-		[]string{},
+		labelNames,
 	)
 
 	dewPointGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "awair_dew_point",
 		},
-		[]string{},
+		labelNames,
 	)
 
 	tempGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "awair_temp",
 		},
-		[]string{},
+		labelNames,
 	)
 
 	humidGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "awair_humid",
 		},
-		[]string{},
+		labelNames,
 	)
 
 	absHumidGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "awair_abs_humid",
 		},
-		[]string{},
+		labelNames,
 	)
 
 	co2Gauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "awair_co2",
 		},
-		[]string{},
+		labelNames,
 	)
 
 	co2EstGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "awair_co2_est",
 		},
-		[]string{},
+		labelNames,
 	)
 
 	co2EstBaselineGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "awair_co2_est_baseline",
 		},
-		[]string{},
+		labelNames,
 	)
 
 	vocGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "awair_voc",
 		},
-		[]string{},
+		labelNames,
 	)
 
 	vocBaselineGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "awair_voc_baseline",
 		},
-		[]string{},
+		labelNames,
 	)
 
 	vocH2RawGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "awair_voc_h2_raw",
 		},
-		[]string{},
+		labelNames,
 	)
 
 	vocEthanolRawGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "awair_voc_ethanol_raw",
 		},
-		[]string{},
+		labelNames,
 	)
 
 	pm25Gauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "awair_pm25",
 		},
-		[]string{},
+		labelNames,
 	)
 
 	pm10EstGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "awair_pm10_est",
 		},
-		[]string{},
+		labelNames,
 	)
 )
 
@@ -131,6 +135,25 @@ type AirData struct {
 	PM10Est        float64   `json:"pm10_est"`
 }
 
+type Config struct {
+	DeviceUUID      string `json:"device_uuid"`
+	WiFiMAC         string `json:"wifi_mac"`
+	SSID            string `json:"ssid"`
+	IP              string `json:"ip"`
+	Netmask         string `json:"netmask"`
+	Gateway         string `json:"gateway"`
+	FirmwareVersion string `json:"fw_version"`
+	Timezone        string `json:"timezone"`
+	Display         string `json:"display"`
+}
+
+func (c Config) ToPrometheusLabels() prometheus.Labels {
+	return prometheus.Labels{
+		"device_uuid": c.DeviceUUID,
+		"ip":          c.IP,
+	}
+}
+
 func init() {
 	prometheus.MustRegister(scoreGauge)
 	prometheus.MustRegister(dewPointGauge)
@@ -148,8 +171,9 @@ func init() {
 	prometheus.MustRegister(pm10EstGauge)
 }
 
-func fetchAirData() {
-	resp, err := http.Get(AwairURL)
+func fetchAirData(labels prometheus.Labels) {
+	latestDataURL := fmt.Sprintf("%s/air-data/latest", AwairURL)
+	resp, err := http.Get(latestDataURL)
 	if err != nil {
 		return
 	}
@@ -162,39 +186,68 @@ func fetchAirData() {
 		}
 
 		airData := AirData{}
-
 		if err := json.Unmarshal(body, &airData); err != nil {
 			return
 		}
 
-		scoreGauge.With(prometheus.Labels{}).Set(airData.Score)
-		dewPointGauge.With(prometheus.Labels{}).Set(airData.DewPoint)
-		tempGauge.With(prometheus.Labels{}).Set(airData.Temp)
-		humidGauge.With(prometheus.Labels{}).Set(airData.Humid)
-		absHumidGauge.With(prometheus.Labels{}).Set(airData.AbsHumid)
-		co2Gauge.With(prometheus.Labels{}).Set(airData.Co2)
-		co2EstGauge.With(prometheus.Labels{}).Set(airData.Co2Est)
-		co2EstBaselineGauge.With(prometheus.Labels{}).Set(airData.Co2EstBaseline)
-		vocGauge.With(prometheus.Labels{}).Set(airData.VOC)
-		vocBaselineGauge.With(prometheus.Labels{}).Set(airData.VOCBaseline)
-		vocH2RawGauge.With(prometheus.Labels{}).Set(airData.VOCH2Raw)
-		vocEthanolRawGauge.With(prometheus.Labels{}).Set(airData.VOCEthanolRaw)
-		pm25Gauge.With(prometheus.Labels{}).Set(airData.PM25)
-		pm10EstGauge.With(prometheus.Labels{}).Set(airData.PM10Est)
+		scoreGauge.With(labels).Set(airData.Score)
+		dewPointGauge.With(labels).Set(airData.DewPoint)
+		tempGauge.With(labels).Set(airData.Temp)
+		humidGauge.With(labels).Set(airData.Humid)
+		absHumidGauge.With(labels).Set(airData.AbsHumid)
+		co2Gauge.With(labels).Set(airData.Co2)
+		co2EstGauge.With(labels).Set(airData.Co2Est)
+		co2EstBaselineGauge.With(labels).Set(airData.Co2EstBaseline)
+		vocGauge.With(labels).Set(airData.VOC)
+		vocBaselineGauge.With(labels).Set(airData.VOCBaseline)
+		vocH2RawGauge.With(labels).Set(airData.VOCH2Raw)
+		vocEthanolRawGauge.With(labels).Set(airData.VOCEthanolRaw)
+		pm25Gauge.With(labels).Set(airData.PM25)
+		pm10EstGauge.With(labels).Set(airData.PM10Est)
 	}
 }
 
-func pollAirData(d time.Duration) {
+func fetchAwairConfig() (Config, error) {
+	configURL := fmt.Sprintf("%s/settings/config/data", AwairURL)
+	resp, err := http.Get(configURL)
+	if err != nil {
+		return Config{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return Config{}, errors.New("invalid status code")
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return Config{}, err
+	}
+
+	config := Config{}
+	if err := json.Unmarshal(body, &config); err != nil {
+		return Config{}, err
+	}
+
+	return config, nil
+}
+
+func pollAirData(d time.Duration, l prometheus.Labels) {
 	timer := time.NewTicker(d)
 	for {
 		<-timer.C
-		fetchAirData()
+		fetchAirData(l)
 	}
 }
 
 func main() {
 	if AwairURL == "" {
 		panic("You must supply an Awair URL")
+	}
+
+	config, err := fetchAwairConfig()
+	if err != nil {
+		panic(err)
 	}
 
 	duration := os.Getenv("POLL_DURATION")
@@ -205,7 +258,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	go pollAirData(d)
+	go pollAirData(d, config.ToPrometheusLabels())
 
 	http.Handle("/metrics", promhttp.Handler())
 	if err := http.ListenAndServe(":8181", nil); err != nil {
