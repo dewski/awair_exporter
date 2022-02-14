@@ -1,4 +1,4 @@
-FROM golang:1.17.6-alpine3.15
+FROM golang:1.14.2-alpine
 
 ADD . /go/src/github.com/dewski/awair_exporter
 RUN go install github.com/dewski/awair_exporter
